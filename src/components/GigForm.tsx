@@ -29,6 +29,7 @@ interface NominatimAddress {
   town?: string;
   village?: string;
   municipality?: string;
+  suburb?: string;
   postcode?: string;
 }
 
@@ -40,12 +41,21 @@ interface AddressSuggestion {
   address: NominatimAddress;
 }
 
-// Format a Nominatim address into: "Street Number, City, Postcode"
+// Format a Nominatim address into: "Street HouseNumber, City, Postcode"
 function formatNominatimAddress(a: NominatimAddress, fallback: string): string {
   const street = a.road ?? a.pedestrian ?? a.footway ?? a.path;
-  const city = a.city ?? a.town ?? a.village ?? a.municipality;
+  const city = a.city ?? a.town ?? a.village ?? a.municipality ?? a.suburb;
   const parts: string[] = [];
-  if (street) parts.push(a.house_number ? `${street} ${a.house_number}` : street);
+
+  if (street && a.house_number) {
+    parts.push(`${street} ${a.house_number}`);
+  } else if (street) {
+    parts.push(street);
+  } else if (a.house_number) {
+    // house number returned without a recognised street type — still include it
+    parts.push(a.house_number);
+  }
+
   if (city) parts.push(city);
   if (a.postcode) parts.push(a.postcode);
   return parts.length > 0 ? parts.join(', ') : fallback;

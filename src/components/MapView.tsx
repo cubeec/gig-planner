@@ -3,8 +3,8 @@
 // This component must only render on the client side (Leaflet uses browser APIs).
 // Import it via MapWrapper which uses next/dynamic with { ssr: false }.
 
-import { useEffect, useMemo } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import { useEffect, useCallback, useState } from 'react';
+import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import type { Gig } from '@/types';
@@ -50,7 +50,7 @@ function createColorPin(color: string, isPast: boolean): L.DivIcon {
   });
 }
 
-// ─── Component that auto-fits map to all markers ───────────────────────────
+// ─── Component that auto-fits map to all markers on first load ─────────────
 function FitBoundsToMarkers({ gigs }: { gigs: Gig[] }) {
   const map = useMap();
 
@@ -72,23 +72,170 @@ function FitBoundsToMarkers({ gigs }: { gigs: Gig[] }) {
   return null;
 }
 
+// ─── Spread overlapping markers so every pin is always visible ─────────────
+//
+// Algorithm:
+//   1. Project every lat/lng to pixel space at the current zoom level.
+//   2. Use union-find to group markers that are within THRESHOLD_PX pixels
+//      of each other (transitive — A→B and B→C puts all three together).
+//   3. For groups of size > 1, spread them in a circle around their centroid
+//      with radius SPREAD_PX, then unproject back to lat/lng.
+//   4. Re-run on every `zoomend` event so groups are always zoom-correct.
+//
+function computeSpreadPositions(gigs: Gig[], map: L.Map): Record<string, [number, number]> {
+  const THRESHOLD_PX = 30; // pixels — markers closer than this are grouped
+  const SPREAD_PX    = 24; // pixels — radius of the spread circle
+
+  const zoom = map.getZoom();
+
+  // Project all gigs to pixel coordinates at this zoom
+  const pixels: Record<string, L.Point> = {};
+  gigs.forEach((g) => {
+    pixels[g.id] = map.project(L.latLng(g.latitude!, g.longitude!), zoom);
+  });
+
+  // ── Union-Find ────────────────────────────────────────────────────────────
+  const parent: Record<string, string> = {};
+  gigs.forEach((g) => { parent[g.id] = g.id; });
+
+  function find(id: string): string {
+    while (parent[id] !== id) {
+      parent[id] = parent[parent[id]]; // path compression
+      id = parent[id];
+    }
+    return id;
+  }
+
+  for (let i = 0; i < gigs.length; i++) {
+    for (let j = i + 1; j < gigs.length; j++) {
+      const dist = pixels[gigs[i].id].distanceTo(pixels[gigs[j].id]);
+      if (dist < THRESHOLD_PX) {
+        parent[find(gigs[i].id)] = find(gigs[j].id);
+      }
+    }
+  }
+
+  // Build groups keyed by their root
+  const groups: Record<string, string[]> = {};
+  gigs.forEach((g) => {
+    const root = find(g.id);
+    if (!groups[root]) groups[root] = [];
+    groups[root].push(g.id);
+  });
+
+  // ── Compute final lat/lng positions ───────────────────────────────────────
+  const result: Record<string, [number, number]> = {};
+
+  Object.values(groups).forEach((group) => {
+    if (group.length === 1) {
+      const g = gigs.find((x) => x.id === group[0])!;
+      result[g.id] = [g.latitude!, g.longitude!];
+      return;
+    }
+
+    // Centroid of the group in pixel space
+    const cx = group.reduce((s, id) => s + pixels[id].x, 0) / group.length;
+    const cy = group.reduce((s, id) => s + pixels[id].y, 0) / group.length;
+
+    // Arrange markers evenly around the centroid
+    group.forEach((id, i) => {
+      const angle = (2 * Math.PI * i) / group.length - Math.PI / 2;
+      const spreadPx = L.point(
+        cx + SPREAD_PX * Math.cos(angle),
+        cy + SPREAD_PX * Math.sin(angle),
+      );
+      const ll = map.unproject(spreadPx, zoom);
+      result[id] = [ll.lat, ll.lng];
+    });
+  });
+
+  return result;
+}
+
+// ─── Markers layer — renders pins and recomputes spread on zoom ─────────────
+function MarkersLayer({ gigs }: { gigs: Gig[] }) {
+  const map = useMap();
+  const [positions, setPositions] = useState<Record<string, [number, number]>>({});
+
+  const refresh = useCallback(() => {
+    if (gigs.length === 0) return;
+    setPositions(computeSpreadPositions(gigs, map));
+  }, [gigs, map]);
+
+  // Compute on mount and whenever gigs list changes
+  useEffect(() => { refresh(); }, [refresh]);
+
+  // Recompute after each zoom animation completes
+  useMapEvents({ zoomend: refresh });
+
+  return (
+    <>
+      {gigs.map((gig) => {
+        const past = isGigPast(gig.date, gig.time);
+        const pos = positions[gig.id] ?? [gig.latitude!, gig.longitude!];
+
+        return (
+          <Marker
+            key={gig.id}
+            position={pos}
+            icon={createColorPin(gig.color, past)}
+          >
+            <Popup maxWidth={260}>
+              <div className="py-1">
+                {/* Color dot + name */}
+                <div className="flex items-center gap-2 mb-2">
+                  <span
+                    className="w-3 h-3 rounded-full shrink-0"
+                    style={{ backgroundColor: past ? '#9ca3af' : gig.color }}
+                  />
+                  <strong className="text-gray-900 text-sm leading-tight">{gig.name}</strong>
+                  {past && (
+                    <span className="text-xs px-1.5 py-0.5 bg-gray-100 text-gray-500 rounded-full">Past</span>
+                  )}
+                </div>
+
+                <div className="text-xs text-gray-600 space-y-1">
+                  <div>📅 {formatGigDate(gig.date)}</div>
+                  <div>🕐 {formatGigTime(gig.time)}</div>
+                  <div>📍 {gig.address}</div>
+                  {gig.eventUrl && (
+                    <div>
+                      <a
+                        href={gig.eventUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-pink-600 hover:underline"
+                      >
+                        Event page ↗
+                      </a>
+                    </div>
+                  )}
+                  {gig.notes && (
+                    <div className="mt-2 pt-2 border-t border-gray-100 text-gray-500 leading-relaxed">
+                      {gig.notes}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </Popup>
+          </Marker>
+        );
+      })}
+    </>
+  );
+}
+
 // ─── Main MapView component ────────────────────────────────────────────────
 interface MapViewProps {
   gigs: Gig[];
 }
 
 export default function MapView({ gigs }: MapViewProps) {
-  const mappableGigs = useMemo(
-    () => gigs.filter((g) => g.latitude != null && g.longitude != null),
-    [gigs]
-  );
-  const unmappableGigs = useMemo(
-    () => gigs.filter((g) => g.latitude == null || g.longitude == null),
-    [gigs]
-  );
+  const mappableGigs = gigs.filter((g) => g.latitude != null && g.longitude != null);
+  const unmappableGigs = gigs.filter((g) => g.latitude == null || g.longitude == null);
 
-  // Default center: Central Europe (fallback when no gigs)
-  const defaultCenter: [number, number] = [50.0755, 14.4378]; // Prague
+  // Default center: Prague (fallback when no gigs)
+  const defaultCenter: [number, number] = [50.0755, 14.4378];
 
   return (
     <div className="flex flex-col gap-4">
@@ -98,7 +245,6 @@ export default function MapView({ gigs }: MapViewProps) {
           center={defaultCenter}
           zoom={7}
           style={{ height: '100%', width: '100%' }}
-          // Prevent scroll wheel from zooming while scrolling the page
           scrollWheelZoom={false}
         >
           <TileLayer
@@ -106,59 +252,11 @@ export default function MapView({ gigs }: MapViewProps) {
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
 
-          {/* Auto-fit to all markers on load / when gigs change */}
+          {/* Fit viewport to all markers on initial load */}
           <FitBoundsToMarkers gigs={mappableGigs} />
 
-          {/* Markers */}
-          {mappableGigs.map((gig) => {
-            const past = isGigPast(gig.date, gig.time);
-            return (
-              <Marker
-                key={gig.id}
-                position={[gig.latitude!, gig.longitude!]}
-                icon={createColorPin(gig.color, past)}
-              >
-                <Popup maxWidth={260}>
-                  <div className="py-1">
-                    {/* Color dot + name */}
-                    <div className="flex items-center gap-2 mb-2">
-                      <span
-                        className="w-3 h-3 rounded-full shrink-0"
-                        style={{ backgroundColor: past ? '#9ca3af' : gig.color }}
-                      />
-                      <strong className="text-gray-900 text-sm leading-tight">{gig.name}</strong>
-                      {past && (
-                        <span className="text-xs px-1.5 py-0.5 bg-gray-100 text-gray-500 rounded-full">Past</span>
-                      )}
-                    </div>
-
-                    <div className="text-xs text-gray-600 space-y-1">
-                      <div>📅 {formatGigDate(gig.date)}</div>
-                      <div>🕐 {formatGigTime(gig.time)}</div>
-                      <div>📍 {gig.address}</div>
-                      {gig.eventUrl && (
-                        <div>
-                          <a
-                            href={gig.eventUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-pink-600 hover:underline"
-                          >
-                            Event page ↗
-                          </a>
-                        </div>
-                      )}
-                      {gig.notes && (
-                        <div className="mt-2 pt-2 border-t border-gray-100 text-gray-500 leading-relaxed">
-                          {gig.notes}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </Popup>
-              </Marker>
-            );
-          })}
+          {/* Spread-aware marker layer — recalculates on every zoom change */}
+          <MarkersLayer gigs={mappableGigs} />
         </MapContainer>
       </div>
 
