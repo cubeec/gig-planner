@@ -61,16 +61,46 @@ function formatNominatimAddress(a: NominatimAddress, fallback: string): string {
   return parts.length > 0 ? parts.join(', ') : fallback;
 }
 
-// Split "HH:MM" into [hours, minutes] strings
-function splitTime(t: string): [string, string] {
-  const [h = '00', m = '00'] = t.split(':');
-  return [h.padStart(2, '0'), m.padStart(2, '0')];
+// ── Date helpers (display = DD/MM/YYYY, storage = YYYY-MM-DD) ────────────────
+function isoToDisplay(iso: string): string {
+  // "2026-04-15" → "15/04/2026"
+  const [y = '', m = '', d = ''] = iso.split('-');
+  return y && m && d ? `${d}/${m}/${y}` : '';
+}
+
+function displayToISO(display: string): string {
+  // "15/04/2026" → "2026-04-15"
+  const [d = '', m = '', y = ''] = display.split('/');
+  if (d.length === 2 && m.length === 2 && y.length === 4) return `${y}-${m}-${d}`;
+  return '';
+}
+
+function autoFormatDate(raw: string): string {
+  // Keep only digits, then insert slashes after positions 2 and 4
+  const digits = raw.replace(/\D/g, '').slice(0, 8);
+  if (digits.length <= 2) return digits;
+  if (digits.length <= 4) return `${digits.slice(0, 2)}/${digits.slice(2)}`;
+  return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
+}
+
+// ── Time helpers ─────────────────────────────────────────────────────────────
+function autoFormatTime(raw: string): string {
+  // Keep only digits, insert colon after position 2
+  const digits = raw.replace(/\D/g, '').slice(0, 4);
+  if (digits.length <= 2) return digits;
+  return `${digits.slice(0, 2)}:${digits.slice(2)}`;
+}
+
+function isValidTime(t: string): boolean {
+  if (!/^\d{2}:\d{2}$/.test(t)) return false;
+  const [h, m] = t.split(':').map(Number);
+  return h >= 0 && h <= 23 && m >= 0 && m <= 59;
 }
 
 export default function GigForm({ gig, onSubmit, onCancel, isSubmitting }: GigFormProps) {
   const [name, setName] = useState('');
   const [address, setAddress] = useState('');
-  const [date, setDate] = useState('');
+  const [displayDate, setDisplayDate] = useState(''); // DD/MM/YYYY shown in the input
   const [time, setTime] = useState('00:00');
   const [eventUrl, setEventUrl] = useState('');
   const [notes, setNotes] = useState('');
@@ -91,7 +121,7 @@ export default function GigForm({ gig, onSubmit, onCancel, isSubmitting }: GigFo
     if (gig) {
       setName(gig.name);
       setAddress(gig.address);
-      setDate(gig.date);
+      setDisplayDate(isoToDisplay(gig.date)); // convert stored YYYY-MM-DD → DD/MM/YYYY
       setTime(gig.time);
       setEventUrl(gig.eventUrl ?? '');
       setNotes(gig.notes ?? '');
@@ -111,18 +141,6 @@ export default function GigForm({ gig, onSubmit, onCancel, isSubmitting }: GigFo
     document.addEventListener('mousedown', onOutside);
     return () => document.removeEventListener('mousedown', onOutside);
   }, []);
-
-  // ── 24-hour time helpers ──────────────────────────────────────────────────
-  const [hours, minutes] = splitTime(time);
-
-  function setHours(val: string) {
-    const h = Math.max(0, Math.min(23, parseInt(val, 10) || 0));
-    setTime(`${String(h).padStart(2, '0')}:${minutes}`);
-  }
-  function setMinutes(val: string) {
-    const m = Math.max(0, Math.min(59, parseInt(val, 10) || 0));
-    setTime(`${hours}:${String(m).padStart(2, '0')}`);
-  }
 
   // ── Address autocomplete ──────────────────────────────────────────────────
   function handleAddressChange(value: string) {
@@ -169,8 +187,20 @@ export default function GigForm({ gig, onSubmit, onCancel, isSubmitting }: GigFo
     const errs: FormErrors = {};
     if (!name.trim()) errs.name = 'Event name is required';
     if (!address.trim()) errs.address = 'Address / venue is required';
-    if (!date) errs.date = 'Date is required';
-    if (!time) errs.time = 'Performance time is required';
+
+    const isoDate = displayToISO(displayDate);
+    if (!displayDate) {
+      errs.date = 'Date is required';
+    } else if (!isoDate || isNaN(new Date(isoDate).getTime())) {
+      errs.date = 'Enter a valid date (DD/MM/YYYY)';
+    }
+
+    if (!time) {
+      errs.time = 'Performance time is required';
+    } else if (!isValidTime(time)) {
+      errs.time = 'Enter a valid time (HH:MM)';
+    }
+
     if (eventUrl.trim()) {
       try { new URL(eventUrl.startsWith('http') ? eventUrl : `https://${eventUrl}`); }
       catch { errs.eventUrl = 'Please enter a valid URL'; }
@@ -185,7 +215,7 @@ export default function GigForm({ gig, onSubmit, onCancel, isSubmitting }: GigFo
     if (!validate()) return;
     try {
       await onSubmit({
-        name, address, date, time,
+        name, address, date: displayToISO(displayDate), time,
         eventUrl: eventUrl.trim(),
         notes,
         ...(selectedCoords ? { latitude: selectedCoords.lat, longitude: selectedCoords.lng } : {}),
@@ -306,9 +336,12 @@ export default function GigForm({ gig, onSubmit, onCancel, isSubmitting }: GigFo
                 Date <span className="text-red-500">*</span>
               </label>
               <input
-                type="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
+                type="text"
+                value={displayDate}
+                onChange={(e) => setDisplayDate(autoFormatDate(e.target.value))}
+                placeholder="DD/MM/YYYY"
+                maxLength={10}
+                inputMode="numeric"
                 className={inputCls(errors.date)}
               />
               {errors.date && <p className="mt-1 text-xs text-red-600">{errors.date}</p>}
@@ -316,32 +349,17 @@ export default function GigForm({ gig, onSubmit, onCancel, isSubmitting }: GigFo
 
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-                Time (24h) <span className="text-red-500">*</span>
+                Time <span className="text-red-500">*</span>
               </label>
-              {/* Custom 24h time picker — avoids browser AM/PM locale issues */}
-              <div className={`flex items-center border rounded-lg px-3 py-2.5 gap-1 transition-colors focus-within:ring-2 focus-within:ring-pink-500 focus-within:border-transparent ${
-                errors.time ? 'border-red-400 bg-red-50' : 'border-gray-300 hover:border-gray-400'
-              }`}>
-                <input
-                  type="number"
-                  min={0}
-                  max={23}
-                  value={parseInt(hours, 10)}
-                  onChange={(e) => setHours(e.target.value)}
-                  className="w-10 text-center text-sm bg-transparent border-none outline-none appearance-none"
-                  aria-label="Hours"
-                />
-                <span className="text-gray-400 font-semibold select-none">:</span>
-                <input
-                  type="number"
-                  min={0}
-                  max={59}
-                  value={parseInt(minutes, 10)}
-                  onChange={(e) => setMinutes(e.target.value)}
-                  className="w-10 text-center text-sm bg-transparent border-none outline-none appearance-none"
-                  aria-label="Minutes"
-                />
-              </div>
+              <input
+                type="text"
+                value={time}
+                onChange={(e) => setTime(autoFormatTime(e.target.value))}
+                placeholder="00:00"
+                maxLength={5}
+                inputMode="numeric"
+                className={inputCls(errors.time)}
+              />
               {errors.time && <p className="mt-1 text-xs text-red-600">{errors.time}</p>}
             </div>
           </div>

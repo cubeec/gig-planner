@@ -117,7 +117,8 @@ export default function HomePage() {
       <header className="bg-black sticky top-0 z-40">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <span className="text-2xl select-none" role="img" aria-label="guitar">🎸</span>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo.svg" alt="Divná Bára" className="h-9 w-9 shrink-0" />
             <div>
               <h1 className="text-xl font-extrabold text-white leading-none">Divná Bára</h1>
               <p className="text-xs text-pink-400 font-medium mt-0.5">Gig Planner</p>
