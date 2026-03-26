@@ -1,0 +1,23 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Gig {
+  id        String   @id @default(cuid())
+  name      String
+  address   String
+  date      String   // YYYY-MM-DD (stored as string to avoid timezone issues)
+  time      String   // HH:MM (24h format)
+  eventUrl  String?
+  notes     String?
+  latitude  Float?   // null when geocoding fails
+  longitude Float?   // null when geocoding fails
+  color     String   // hex color assigned at creation
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
