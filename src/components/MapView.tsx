@@ -84,9 +84,12 @@ function FitBoundsToMarkers({ gigs }: { gigs: Gig[] }) {
 //
 function computeSpreadPositions(gigs: Gig[], map: L.Map): Record<string, [number, number]> {
   const THRESHOLD_PX = 30; // pixels — markers closer than this are grouped
-  const SPREAD_PX    = 24; // pixels — radius of the spread circle
 
   const zoom = map.getZoom();
+
+  // Spread radius scales with zoom: small when zoomed out, larger when zoomed in.
+  // zoom 5 → ~8px   zoom 8 → ~12px   zoom 12 → ~18px   zoom 15 → 22px (cap)
+  const SPREAD_PX = Math.round(Math.max(8, Math.min(22, zoom * 1.5)));
 
   // Project all gigs to pixel coordinates at this zoom
   const pixels: Record<string, L.Point> = {};
