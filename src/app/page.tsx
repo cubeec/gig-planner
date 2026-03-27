@@ -7,12 +7,14 @@ import GigTimeline from '@/components/GigTimeline';
 import MapWrapper from '@/components/MapWrapper';
 import GigForm from '@/components/GigForm';
 import DeleteConfirmModal from '@/components/DeleteConfirmModal';
+import CalendarSubscribeModal from '@/components/CalendarSubscribeModal';
 
 type Tab = 'timeline' | 'map';
 
 export default function HomePage() {
   const [gigs, setGigs] = useState<Gig[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showCalendarModal, setShowCalendarModal] = useState(false);
   const [error, setError] = useState('');
 
   // Modal state
@@ -125,16 +127,32 @@ export default function HomePage() {
             </div>
           </div>
 
-          <button
-            onClick={handleAddNew}
-            className="flex items-center gap-2 px-4 py-2 bg-pink-500 text-white text-sm font-semibold rounded-lg hover:bg-pink-600 active:scale-95 transition-all shadow-sm"
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
-            </svg>
-            <span className="hidden sm:inline">Přidat koncert</span>
-            <span className="sm:hidden">Přidat</span>
-          </button>
+          <div className="flex items-center gap-2">
+            {/* Subscribe to calendar */}
+            <button
+              onClick={() => setShowCalendarModal(true)}
+              className="flex items-center gap-1.5 px-3 py-2 text-white/70 hover:text-white text-sm font-medium rounded-lg hover:bg-white/10 transition-colors"
+              title="Odebírat kalendář"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              <span className="hidden sm:inline">Odebírat</span>
+            </button>
+
+            {/* Add gig */}
+            <button
+              onClick={handleAddNew}
+              className="flex items-center gap-2 px-4 py-2 bg-pink-500 text-white text-sm font-semibold rounded-lg hover:bg-pink-600 active:scale-95 transition-all shadow-sm"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
+              </svg>
+              <span className="hidden sm:inline">Přidat koncert</span>
+              <span className="sm:hidden">Přidat</span>
+            </button>
+          </div>
         </div>
       </header>
 
@@ -224,6 +242,11 @@ export default function HomePage() {
           onCancel={() => setDeletingGig(null)}
           isDeleting={isDeleting}
         />
+      )}
+
+      {/* ── Calendar Subscribe Modal ── */}
+      {showCalendarModal && (
+        <CalendarSubscribeModal onClose={() => setShowCalendarModal(false)} />
       )}
     </div>
   );

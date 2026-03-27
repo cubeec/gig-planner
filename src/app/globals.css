@@ -12,38 +12,24 @@
   border-radius: 14px !important;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.18) !important;
   padding: 0 !important;
-  min-width: 240px !important;
+  overflow: hidden !important;
 }
 
-/* Inner content area — roomy padding, leave top space for the × button */
+/* Inner content — zero margin/padding; PopupContent handles its own spacing */
 .leaflet-popup-content {
   margin: 0 !important;
-  padding: 40px 20px 18px 20px !important;
+  padding: 0 !important;
   font-family: 'Inter', system-ui, sans-serif !important;
 }
 
-/* Close × button — pull it inside the rounded container */
+/* Hide Leaflet's default × — we render our own inside PopupContent */
 .leaflet-popup-close-button {
-  top: 10px !important;
-  right: 10px !important;
-  width: 22px !important;
-  height: 22px !important;
-  font-size: 16px !important;
-  line-height: 22px !important;
-  border-radius: 50% !important;
-  background: #f3f4f6 !important;
-  color: #6b7280 !important;
-  text-align: center !important;
-  padding: 0 !important;
-}
-.leaflet-popup-close-button:hover {
-  background: #e5e7eb !important;
-  color: #111827 !important;
+  display: none !important;
 }
 
-/* Triangle tip — flush against the bubble (no gap) */
+/* Triangle tip — flush against the bubble, no gap */
 .leaflet-popup-tip-container {
-  margin-top: -1px !important;
+  margin-top: -2px !important;
 }
 .leaflet-popup-tip {
   background: white !important;

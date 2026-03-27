@@ -155,6 +155,90 @@ function computeSpreadPositions(gigs: Gig[], map: L.Map): Record<string, [number
   return result;
 }
 
+// ─── Popup content — rendered inside each marker's popup ───────────────────
+// Must be a child of MapContainer so it can call useMap().
+function PopupContent({ gig, past }: { gig: Gig; past: boolean }) {
+  const map = useMap();
+  return (
+    <div style={{ position: 'relative', minWidth: 270, padding: '20px 20px 16px' }}>
+      {/* Custom close button — sits inside the white box, top-right corner */}
+      <button
+        onClick={() => map.closePopup()}
+        aria-label="Zavřít"
+        style={{
+          position: 'absolute',
+          top: 10,
+          right: 10,
+          width: 26,
+          height: 26,
+          borderRadius: '50%',
+          background: '#f3f4f6',
+          border: 'none',
+          cursor: 'pointer',
+          fontSize: 18,
+          lineHeight: '26px',
+          textAlign: 'center',
+          color: '#6b7280',
+          padding: 0,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        ×
+      </button>
+
+      {/* Color dot + name */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10, paddingRight: 28 }}>
+        <span
+          style={{
+            width: 12, height: 12, borderRadius: '50%', flexShrink: 0,
+            backgroundColor: past ? '#9ca3af' : gig.color,
+          }}
+        />
+        <strong style={{ fontSize: 14, color: '#111827', lineHeight: 1.3 }}>{gig.name}</strong>
+        {past && (
+          <span style={{
+            fontSize: 11, padding: '2px 7px', borderRadius: 99,
+            background: '#f3f4f6', color: '#6b7280', flexShrink: 0,
+          }}>
+            Minulý
+          </span>
+        )}
+      </div>
+
+      <div style={{ fontSize: 12, color: '#4b5563', display: 'flex', flexDirection: 'column', gap: 5 }}>
+        <div>📅 {formatGigDate(gig.date)}</div>
+        <div>🕐 {formatGigTime(gig.time)}</div>
+        <div>📍 {gig.address}</div>
+        {gig.eventUrl && (
+          <div>
+            <a
+              href={gig.eventUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: '#ec4899', textDecoration: 'none' }}
+              onMouseOver={(e) => (e.currentTarget.style.textDecoration = 'underline')}
+              onMouseOut={(e) => (e.currentTarget.style.textDecoration = 'none')}
+            >
+              Stránka akce ↗
+            </a>
+          </div>
+        )}
+        {gig.notes && (
+          <div style={{
+            marginTop: 6, paddingTop: 6,
+            borderTop: '1px solid #f3f4f6',
+            color: '#6b7280', lineHeight: 1.5,
+          }}>
+            {gig.notes}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ─── Markers layer — renders pins and recomputes spread on zoom ─────────────
 function MarkersLayer({ gigs }: { gigs: Gig[] }) {
   const map = useMap();
@@ -183,43 +267,9 @@ function MarkersLayer({ gigs }: { gigs: Gig[] }) {
             position={pos}
             icon={createColorPin(gig.color, past)}
           >
-            <Popup maxWidth={260}>
-              <div className="py-1">
-                {/* Color dot + name */}
-                <div className="flex items-center gap-2 mb-2">
-                  <span
-                    className="w-3 h-3 rounded-full shrink-0"
-                    style={{ backgroundColor: past ? '#9ca3af' : gig.color }}
-                  />
-                  <strong className="text-gray-900 text-sm leading-tight">{gig.name}</strong>
-                  {past && (
-                    <span className="text-xs px-1.5 py-0.5 bg-gray-100 text-gray-500 rounded-full">Minulý</span>
-                  )}
-                </div>
-
-                <div className="text-xs text-gray-600 space-y-1">
-                  <div>📅 {formatGigDate(gig.date)}</div>
-                  <div>🕐 {formatGigTime(gig.time)}</div>
-                  <div>📍 {gig.address}</div>
-                  {gig.eventUrl && (
-                    <div>
-                      <a
-                        href={gig.eventUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-pink-600 hover:underline"
-                      >
-                        Stránka akce ↗
-                      </a>
-                    </div>
-                  )}
-                  {gig.notes && (
-                    <div className="mt-2 pt-2 border-t border-gray-100 text-gray-500 leading-relaxed">
-                      {gig.notes}
-                    </div>
-                  )}
-                </div>
-              </div>
+            {/* closeButton=false: we render our own inside PopupContent */}
+            <Popup maxWidth={340} closeButton={false}>
+              <PopupContent gig={gig} past={past} />
             </Popup>
           </Marker>
         );
