@@ -64,12 +64,12 @@ export default function GigTimeline({ gigs, onEdit, onDelete }: GigTimelineProps
         </div>
 
         {/* Filter tabs */}
-        <div className="flex rounded-lg border border-gray-300 overflow-hidden shrink-0">
+        <div className="flex rounded-lg border border-gray-300 overflow-hidden shrink-0 sm:shrink w-full sm:w-auto">
           {(['all', 'upcoming', 'past'] as FilterType[]).map((f) => (
             <button
               key={f}
               onClick={() => setFilter(f)}
-              className={`px-4 py-2 text-sm font-medium transition-colors ${
+              className={`flex-1 sm:flex-none px-4 py-2 text-sm font-medium transition-colors ${
                 filter === f
                   ? 'bg-black text-white'
                   : 'bg-white text-gray-600 hover:bg-gray-50'
