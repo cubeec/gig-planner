@@ -17,7 +17,7 @@ export default function DeleteConfirmModal({
   isDeleting,
 }: DeleteConfirmModalProps) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+    <div className="fixed inset-0 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in" style={{ zIndex: 1000 }}>
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
         {/* Icon */}
         <div className="flex items-center justify-center w-12 h-12 rounded-full bg-red-100 mx-auto mb-4">
