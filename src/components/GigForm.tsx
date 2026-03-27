@@ -185,25 +185,25 @@ export default function GigForm({ gig, onSubmit, onCancel, isSubmitting }: GigFo
   // ── Validation ───────────────────────────────────────────────────────────
   function validate(): boolean {
     const errs: FormErrors = {};
-    if (!name.trim()) errs.name = 'Event name is required';
-    if (!address.trim()) errs.address = 'Address / venue is required';
+    if (!name.trim()) errs.name = 'Název akce je povinný';
+    if (!address.trim()) errs.address = 'Adresa je povinná';
 
     const isoDate = displayToISO(displayDate);
     if (!displayDate) {
-      errs.date = 'Date is required';
+      errs.date = 'Datum je povinné';
     } else if (!isoDate || isNaN(new Date(isoDate).getTime())) {
-      errs.date = 'Enter a valid date (DD/MM/YYYY)';
+      errs.date = 'Zadejte platné datum (DD/MM/RRRR)';
     }
 
     if (!time) {
-      errs.time = 'Performance time is required';
+      errs.time = 'Čas vystoupení je povinný';
     } else if (!isValidTime(time)) {
-      errs.time = 'Enter a valid time (HH:MM)';
+      errs.time = 'Zadejte platný čas (HH:MM)';
     }
 
     if (eventUrl.trim()) {
       try { new URL(eventUrl.startsWith('http') ? eventUrl : `https://${eventUrl}`); }
-      catch { errs.eventUrl = 'Please enter a valid URL'; }
+      catch { errs.eventUrl = 'Zadejte platnou URL adresu'; }
     }
     setErrors(errs);
     return Object.keys(errs).length === 0;
@@ -221,7 +221,7 @@ export default function GigForm({ gig, onSubmit, onCancel, isSubmitting }: GigFo
         ...(selectedCoords ? { latitude: selectedCoords.lat, longitude: selectedCoords.lng } : {}),
       });
     } catch (err: unknown) {
-      setServerError(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
+      setServerError(err instanceof Error ? err.message : 'Něco se pokazilo. Zkuste to znovu.');
     }
   }
 
@@ -237,12 +237,12 @@ export default function GigForm({ gig, onSubmit, onCancel, isSubmitting }: GigFo
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
           <h2 className="text-xl font-bold text-gray-900">
-            {isEdit ? 'Edit Gig' : 'Add New Gig'}
+            {isEdit ? 'Upravit koncert' : 'Přidat nový koncert'}
           </h2>
           <button
             onClick={onCancel}
             className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-            aria-label="Close"
+            aria-label="Zavřít"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -261,13 +261,13 @@ export default function GigForm({ gig, onSubmit, onCancel, isSubmitting }: GigFo
           {/* Event Name */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-              Event Name <span className="text-red-500">*</span>
+              Název akce <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Rock Café Praha"
+              placeholder="např. Rock Café Praha"
               className={inputCls(errors.name)}
             />
             {errors.name && <p className="mt-1 text-xs text-red-600">{errors.name}</p>}
@@ -276,7 +276,7 @@ export default function GigForm({ gig, onSubmit, onCancel, isSubmitting }: GigFo
           {/* Address with autocomplete */}
           <div className="relative" ref={dropdownRef}>
             <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-              Address / Venue <span className="text-red-500">*</span>
+              Adresa / Místo <span className="text-red-500">*</span>
             </label>
             <div className="relative">
               <input
@@ -325,7 +325,7 @@ export default function GigForm({ gig, onSubmit, onCancel, isSubmitting }: GigFo
 
             {errors.address && <p className="mt-1 text-xs text-red-600">{errors.address}</p>}
             <p className="mt-1 text-xs text-gray-400">
-              {selectedCoords ? '✓ Location pinpointed' : 'Type at least 3 characters to search'}
+              {selectedCoords ? '✓ Poloha nalezena' : 'Zadejte alespoň 3 znaky pro vyhledání'}
             </p>
           </div>
 
@@ -333,7 +333,7 @@ export default function GigForm({ gig, onSubmit, onCancel, isSubmitting }: GigFo
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-                Date <span className="text-red-500">*</span>
+                Datum <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
@@ -349,7 +349,7 @@ export default function GigForm({ gig, onSubmit, onCancel, isSubmitting }: GigFo
 
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-                Time <span className="text-red-500">*</span>
+                Čas <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
@@ -367,7 +367,7 @@ export default function GigForm({ gig, onSubmit, onCancel, isSubmitting }: GigFo
           {/* Event URL */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-              Event URL <span className="text-gray-400 font-normal text-xs">(optional)</span>
+              Odkaz na akci <span className="text-gray-400 font-normal text-xs">(nepovinné)</span>
             </label>
             <input
               type="url"
@@ -382,12 +382,12 @@ export default function GigForm({ gig, onSubmit, onCancel, isSubmitting }: GigFo
           {/* Notes */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-              Notes <span className="text-gray-400 font-normal text-xs">(optional)</span>
+              Poznámky <span className="text-gray-400 font-normal text-xs">(nepovinné)</span>
             </label>
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="Load-in time, set length, backline details…"
+              placeholder="Čas příjezdu, délka setu, backline…"
               rows={3}
               className="w-full px-3.5 py-2.5 rounded-lg border border-gray-300 hover:border-gray-400 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent resize-none"
             />
@@ -400,7 +400,7 @@ export default function GigForm({ gig, onSubmit, onCancel, isSubmitting }: GigFo
               onClick={onCancel}
               className="flex-1 px-4 py-2.5 rounded-lg border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
             >
-              Cancel
+              Zrušit
             </button>
             <button
               type="submit"
@@ -408,8 +408,8 @@ export default function GigForm({ gig, onSubmit, onCancel, isSubmitting }: GigFo
               className="flex-1 px-4 py-2.5 rounded-lg bg-black text-white text-sm font-semibold hover:bg-gray-800 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
             >
               {isSubmitting
-                ? (isEdit ? 'Saving…' : 'Adding…')
-                : (isEdit ? 'Save Changes' : 'Add Gig')}
+                ? (isEdit ? 'Ukládám…' : 'Přidávám…')
+                : (isEdit ? 'Uložit změny' : 'Přidat koncert')}
             </button>
           </div>
         </form>

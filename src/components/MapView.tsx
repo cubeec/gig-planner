@@ -193,7 +193,7 @@ function MarkersLayer({ gigs }: { gigs: Gig[] }) {
                   />
                   <strong className="text-gray-900 text-sm leading-tight">{gig.name}</strong>
                   {past && (
-                    <span className="text-xs px-1.5 py-0.5 bg-gray-100 text-gray-500 rounded-full">Past</span>
+                    <span className="text-xs px-1.5 py-0.5 bg-gray-100 text-gray-500 rounded-full">Minulý</span>
                   )}
                 </div>
 
@@ -209,7 +209,7 @@ function MarkersLayer({ gigs }: { gigs: Gig[] }) {
                         rel="noopener noreferrer"
                         className="text-pink-600 hover:underline"
                       >
-                        Event page ↗
+                        Stránka akce ↗
                       </a>
                     </div>
                   )}
@@ -267,7 +267,7 @@ export default function MapView({ gigs }: MapViewProps) {
       {gigs.length > 0 && (
         <div className="bg-white rounded-xl border border-gray-200 p-4">
           <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">
-            Legend
+            Legenda
           </h3>
           <div className="flex flex-wrap gap-x-5 gap-y-2">
             {gigs.map((gig) => {
@@ -281,7 +281,7 @@ export default function MapView({ gigs }: MapViewProps) {
                   <span className={`text-sm ${past ? 'text-gray-400' : 'text-gray-700'}`}>
                     {gig.name}
                   </span>
-                  {past && <span className="text-xs text-gray-400">(past)</span>}
+                  {past && <span className="text-xs text-gray-400">(minulý)</span>}
                 </div>
               );
             })}
@@ -296,12 +296,12 @@ export default function MapView({ gigs }: MapViewProps) {
             <span className="text-amber-500 text-lg">⚠</span>
             <div>
               <p className="text-sm font-semibold text-amber-800">
-                {unmappableGigs.length} gig{unmappableGigs.length !== 1 ? 's' : ''} could not be shown on the map
+                {unmappableGigs.length} {unmappableGigs.length === 1 ? 'koncert nemohl být' : 'koncerty nemohly být'} zobrazeny na mapě
               </p>
               <p className="text-xs text-amber-700 mt-0.5">
-                Geocoding failed for:{' '}
+                Geokódování selhalo pro:{' '}
                 {unmappableGigs.map((g) => g.name).join(', ')}.
-                Try editing the gig with a more specific address.
+                Zkuste upravit adresu na přesnější.
               </p>
             </div>
           </div>
@@ -312,8 +312,8 @@ export default function MapView({ gigs }: MapViewProps) {
       {gigs.length === 0 && (
         <div className="text-center py-10">
           <div className="text-4xl mb-3">🗺️</div>
-          <p className="text-gray-500 font-medium">No gigs to show on the map yet.</p>
-          <p className="text-sm text-gray-400 mt-1">Add your first gig to see it pinned here.</p>
+          <p className="text-gray-500 font-medium">Zatím žádné koncerty na mapě.</p>
+          <p className="text-sm text-gray-400 mt-1">Přidejte první koncert a uvidíte ho zde.</p>
         </div>
       )}
     </div>

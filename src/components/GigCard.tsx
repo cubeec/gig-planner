@@ -39,7 +39,7 @@ export default function GigCard({ gig, onEdit, onDelete }: GigCardProps) {
             </h3>
             {past && (
               <span className="shrink-0 text-xs px-2 py-0.5 rounded-full bg-gray-200 text-gray-500 font-medium">
-                Past
+                Minulý
               </span>
             )}
           </div>
@@ -49,7 +49,7 @@ export default function GigCard({ gig, onEdit, onDelete }: GigCardProps) {
               <button
                 onClick={() => onEdit(gig)}
                 className="p-1.5 text-gray-400 hover:text-pink-600 hover:bg-pink-50 rounded-lg transition-colors"
-                title="Edit gig"
+                title="Upravit koncert"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -60,7 +60,7 @@ export default function GigCard({ gig, onEdit, onDelete }: GigCardProps) {
             <button
               onClick={() => onDelete(gig)}
               className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-              title="Delete gig"
+              title="Smazat koncert"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -98,7 +98,7 @@ export default function GigCard({ gig, onEdit, onDelete }: GigCardProps) {
             <span className="truncate">{gig.address}</span>
             {!gig.latitude && (
               <span className="shrink-0 text-xs text-amber-500" title="Could not geocode this address">
-                ⚠ No map pin
+                ⚠ Není na mapě
               </span>
             )}
           </div>

@@ -27,14 +27,14 @@ export default function DeleteConfirmModal({
           </svg>
         </div>
 
-        <h2 className="text-lg font-bold text-gray-900 text-center mb-1">Delete Gig</h2>
+        <h2 className="text-lg font-bold text-gray-900 text-center mb-1">Smazat koncert</h2>
         <p className="text-sm text-gray-600 text-center mb-6">
-          Are you sure you want to delete{' '}
+          Opravdu chcete smazat{' '}
           <span className="font-semibold text-gray-900">{gig.name}</span>
-          {' '}on{' '}
+          {' '}dne{' '}
           <span className="font-semibold text-gray-900">{formatGigDate(gig.date)}</span>?
           <br />
-          <span className="text-red-500">This cannot be undone.</span>
+          <span className="text-red-500">Tuto akci nelze vrátit zpět.</span>
         </p>
 
         <div className="flex gap-3">
@@ -43,14 +43,14 @@ export default function DeleteConfirmModal({
             disabled={isDeleting}
             className="flex-1 px-4 py-2.5 rounded-lg border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 transition-colors"
           >
-            Cancel
+            Zrušit
           </button>
           <button
             onClick={onConfirm}
             disabled={isDeleting}
             className="flex-1 px-4 py-2.5 rounded-lg bg-red-600 text-white text-sm font-semibold hover:bg-red-700 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
           >
-            {isDeleting ? 'Deleting…' : 'Delete'}
+            {isDeleting ? 'Mažu…' : 'Smazat'}
           </button>
         </div>
       </div>

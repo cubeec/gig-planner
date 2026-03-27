@@ -32,11 +32,11 @@ export default function HomePage() {
     try {
       setError('');
       const res = await fetch('/api/gigs');
-      if (!res.ok) throw new Error('Failed to load gigs');
+      if (!res.ok) throw new Error('Nepodařilo se načíst koncerty');
       const data: Gig[] = await res.json();
       setGigs(sortGigsChronologically(data));
     } catch {
-      setError('Could not load gigs. Please refresh the page.');
+      setError('Nepodařilo se načíst koncerty. Obnovte stránku.');
     } finally {
       setLoading(false);
     }
@@ -65,7 +65,7 @@ export default function HomePage() {
         // Surface the first server-side validation error
         const firstError = body.errors
           ? Object.values(body.errors)[0]
-          : body.error ?? 'Failed to save gig';
+          : body.error ?? 'Nepodařilo se uložit koncert';
         throw new Error(firstError as string);
       }
 
@@ -84,11 +84,11 @@ export default function HomePage() {
     setIsDeleting(true);
     try {
       const res = await fetch(`/api/gigs/${deletingGig.id}`, { method: 'DELETE' });
-      if (!res.ok) throw new Error('Failed to delete');
+      if (!res.ok) throw new Error('Nepodařilo se smazat');
       await fetchGigs();
       setDeletingGig(null);
     } catch {
-      alert('Could not delete the gig. Please try again.');
+      alert('Nepodařilo se smazat koncert. Zkuste to znovu.');
     } finally {
       setIsDeleting(false);
     }
@@ -121,7 +121,7 @@ export default function HomePage() {
             <img src="/logo.svg" alt="Divná Bára" className="h-9 w-9 shrink-0" />
             <div>
               <h1 className="text-xl font-extrabold text-white leading-none">Divná Bára</h1>
-              <p className="text-xs text-pink-400 font-medium mt-0.5">Gig Planner</p>
+              <p className="text-xs text-pink-400 font-medium mt-0.5">Plánování koncertů</p>
             </div>
           </div>
 
@@ -132,8 +132,8 @@ export default function HomePage() {
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
             </svg>
-            <span className="hidden sm:inline">Add Gig</span>
-            <span className="sm:hidden">Add</span>
+            <span className="hidden sm:inline">Přidat koncert</span>
+            <span className="sm:hidden">Přidat</span>
           </button>
         </div>
       </header>
@@ -154,7 +154,7 @@ export default function HomePage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                 d="M4 6h16M4 10h16M4 14h16M4 18h16" />
             </svg>
-            Timeline
+            Přehled
           </button>
           <button
             onClick={() => setTab('map')}
@@ -168,7 +168,7 @@ export default function HomePage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                 d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
             </svg>
-            Map
+            Mapa
           </button>
         </div>
 

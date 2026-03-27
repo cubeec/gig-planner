@@ -46,7 +46,7 @@ export default function GigTimeline({ gigs, onEdit, onDelete }: GigTimelineProps
           </svg>
           <input
             type="text"
-            placeholder="Search events, venues…"
+            placeholder="Hledat koncerty, místa…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full pl-9 pr-4 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
@@ -69,13 +69,13 @@ export default function GigTimeline({ gigs, onEdit, onDelete }: GigTimelineProps
             <button
               key={f}
               onClick={() => setFilter(f)}
-              className={`px-4 py-2 text-sm font-medium capitalize transition-colors ${
+              className={`px-4 py-2 text-sm font-medium transition-colors ${
                 filter === f
                   ? 'bg-black text-white'
                   : 'bg-white text-gray-600 hover:bg-gray-50'
               }`}
             >
-              {f}
+              {f === 'all' ? 'Vše' : f === 'upcoming' ? 'Nadcházející' : 'Minulé'}
             </button>
           ))}
         </div>
@@ -87,18 +87,18 @@ export default function GigTimeline({ gigs, onEdit, onDelete }: GigTimelineProps
           <div className="text-5xl mb-4">🎸</div>
           {search ? (
             <>
-              <p className="text-gray-600 font-medium">No results for &ldquo;{search}&rdquo;</p>
+              <p className="text-gray-600 font-medium">Žádné výsledky pro &ldquo;{search}&rdquo;</p>
               <button
                 onClick={() => setSearch('')}
                 className="mt-2 text-sm text-pink-600 hover:underline"
               >
-                Clear search
+                Zrušit hledání
               </button>
             </>
           ) : (
             <>
-              <p className="text-gray-600 font-medium">No gigs yet</p>
-              <p className="text-sm text-gray-400 mt-1">Add your first gig using the button above.</p>
+              <p className="text-gray-600 font-medium">Zatím žádné koncerty</p>
+              <p className="text-sm text-gray-400 mt-1">Přidejte první koncert tlačítkem výše.</p>
             </>
           )}
         </div>
@@ -108,7 +108,7 @@ export default function GigTimeline({ gigs, onEdit, onDelete }: GigTimelineProps
       {showUpcoming && upcoming.length > 0 && (
         <section className="mb-8">
           <div className="flex items-center gap-2 mb-3">
-            <h2 className="text-sm font-bold text-gray-500 uppercase tracking-wider">Upcoming</h2>
+            <h2 className="text-sm font-bold text-gray-500 uppercase tracking-wider">Nadcházející</h2>
             <span className="text-xs bg-pink-100 text-pink-700 font-semibold px-2 py-0.5 rounded-full">
               {upcoming.length}
             </span>
@@ -125,7 +125,7 @@ export default function GigTimeline({ gigs, onEdit, onDelete }: GigTimelineProps
       {showPast && past.length > 0 && (
         <section>
           <div className="flex items-center gap-2 mb-3">
-            <h2 className="text-sm font-bold text-gray-400 uppercase tracking-wider">Past Events</h2>
+            <h2 className="text-sm font-bold text-gray-400 uppercase tracking-wider">Minulé koncerty</h2>
             <span className="text-xs bg-gray-100 text-gray-500 font-semibold px-2 py-0.5 rounded-full">
               {past.length}
             </span>
