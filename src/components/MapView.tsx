@@ -160,7 +160,7 @@ function computeSpreadPositions(gigs: Gig[], map: L.Map): Record<string, [number
 function PopupContent({ gig, past }: { gig: Gig; past: boolean }) {
   const map = useMap();
   return (
-    <div style={{ position: 'relative', minWidth: 270, padding: '20px 20px 16px' }}>
+    <div style={{ position: 'relative', width: 270, padding: '20px 20px 16px', overflowWrap: 'break-word', wordBreak: 'break-word' }}>
       {/* Custom close button — sits inside the white box, top-right corner */}
       <button
         onClick={() => map.closePopup()}
@@ -230,6 +230,7 @@ function PopupContent({ gig, past }: { gig: Gig; past: boolean }) {
             marginTop: 6, paddingTop: 6,
             borderTop: '1px solid #f3f4f6',
             color: '#6b7280', lineHeight: 1.5,
+            whiteSpace: 'pre-wrap',
           }}>
             {gig.notes}
           </div>
