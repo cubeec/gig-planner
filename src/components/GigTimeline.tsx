@@ -13,7 +13,7 @@ interface GigTimelineProps {
 
 export default function GigTimeline({ gigs, onEdit, onDelete }: GigTimelineProps) {
   const [search, setSearch] = useState('');
-  const [filter, setFilter] = useState<FilterType>('all');
+  const [filter, setFilter] = useState<FilterType>('upcoming');
 
   const { upcoming, past } = useMemo(() => {
     const sorted = sortGigsChronologically(gigs);
