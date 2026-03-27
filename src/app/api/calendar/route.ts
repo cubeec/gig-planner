@@ -5,6 +5,9 @@
 //   Apple Calendar   → File → "New Calendar Subscription…"
 //   Outlook          → Add calendar → "Subscribe from web"
 
+// Force Next.js to always run this handler fresh — never serve a cached build
+export const dynamic = 'force-dynamic';
+
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 
@@ -77,7 +80,9 @@ export async function GET() {
   return new NextResponse(ics, {
     headers: {
       'Content-Type': 'text/calendar; charset=utf-8',
-      'Cache-Control': 'public, max-age=3600',
+      // no-cache: calendar apps must revalidate on every sync — no stale events
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
       // Hint to calendar apps that this is a subscribable feed
       'Content-Disposition': 'inline; filename="divna-bara-koncerty.ics"',
     },
